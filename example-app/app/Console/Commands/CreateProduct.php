@@ -3,50 +3,49 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 
 class CreateProduct extends Command
 {
-    protected $signature = 'product:create {name} {price} {description?}';
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'product:create {name} {price} {category_id} {description?}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
     protected $description = 'Create a new product';
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $name = $this->argument('name');
-        $price = $this->argument('price');
         $description = $this->argument('description');
+        $price = $this->argument('price');
+        $categoryId = $this->argument('category_id');
 
-        // Fetch all categories
-        $categories = Category::all();
+        $category = Category::find($categoryId);
 
-        // Debugging line
-        $this->info('Categories found: ' . $categories->count());
-
-        if ($categories->isEmpty()) {
-            $this->error('No categories found. Please add categories first.');
+        if (!$category) {
+            $this->error('Category not found.');
             return 1;
         }
 
-        // Display categories and let user choose
-        $categoryOptions = $categories->pluck('name', 'id')->toArray();
-        $categoryId = $this->choice('Select a category', $categoryOptions);
+        $product = $category->products()->create([
+            'name' => $name,
+            'description' => $description,
+            'price' => $price,
+        ]);
 
-        // Create the product
-        $product = new Product();
-        $product->name = $name;
-        $product->price = $price;
-        $product->category_id = $categoryId; // Use the selected category ID directly
-        $product->description = $description;
-        $product->save();
-
-        $this->info('Product created successfully!');
+        $this->info('Product created successfully: ' . $product->name);
         return 0;
     }
-    
 }
