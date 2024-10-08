@@ -13,7 +13,7 @@ class CreateProduct extends Command
      *
      * @var string
      */
-    protected $signature = 'product:create {name} {price} {category_id} {description?}';
+    protected $signature = 'product:create {name} {price} {description?}';
 
     /**
      * The console command description.
@@ -30,14 +30,18 @@ class CreateProduct extends Command
         $name = $this->argument('name');
         $description = $this->argument('description');
         $price = $this->argument('price');
-        $categoryId = $this->argument('category_id');
 
-        $category = Category::find($categoryId);
+        $categories = Category::all();
 
-        if (!$category) {
-            $this->error('Category not found.');
+        if ($categories->isEmpty()) {
+            $this->error('No categories found. Please create a category first.');
             return 1;
         }
+
+        $categoryNames = $categories->pluck('name')->toArray();
+        $selectedCategoryName = $this->choice('Select a category for this product', $categoryNames);
+
+        $category = $categories->firstWhere('name', $selectedCategoryName);
 
         $product = $category->products()->create([
             'name' => $name,
