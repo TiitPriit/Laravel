@@ -7,9 +7,40 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Charts\DemoChart;
+use App\Charts\CategoryAveragePriceChart;
+use App\Charts\FirstLetterCountChart;
+
 
 class CategoryController extends Controller
 {   
+    public function showFirstLetterCountChart()
+    {
+        $productsByFirstLetter = Product::select(DB::raw('SUBSTRING(name, 1, 1) as first_letter'), DB::raw('COUNT(*) as product_count'))
+            ->groupBy('first_letter')
+            ->orderBy('first_letter')
+            ->get();
+
+        $chart = new FirstLetterCountChart;
+        $chart->configure($productsByFirstLetter);
+
+        return view('charts.first_letter_count', compact('chart'));
+    }
+    public function showCategoryAveragePriceChart()
+    {
+        $categories = Category::with('products')
+            ->select('categories.name', 
+                     DB::raw('AVG(products.price) as average_price'), 
+                     DB::raw('MAX(products.price) as max_price'), 
+                     DB::raw('MIN(products.price) as min_price'))
+            ->join('products', 'products.category_id', '=', 'categories.id')
+            ->groupBy('categories.name')
+            ->get();
+
+        $chart = new CategoryAveragePriceChart;
+        $chart->configure($categories);
+
+        return view('charts.category_average_price', compact('chart'));
+    }
     public function showDemoChart()
     {
         $chart = new DemoChart;
