@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ListProducts::class,
         \App\Console\Commands\CreateCategory::class,
         \App\Console\Commands\ListCategories::class,
+        \App\Console\Commands\ListCategoryAveragePrices::class,
     ];
 
     /**
